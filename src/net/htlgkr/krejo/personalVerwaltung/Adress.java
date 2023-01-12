@@ -6,4 +6,13 @@ public record Adress(String street,
                      String cityName,
                      String countryName) {
 
+
+    @Override
+    public String toString() {
+        return  "STREET=" + street +
+                "HOUSENUMBER=" + houseNumber +
+                "ZIPCODE=" + zipCode +
+                "CITYNAME=" + cityName +
+                "COUNTRYNAME=" + countryName;
+    }
 }
