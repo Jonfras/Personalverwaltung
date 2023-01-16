@@ -15,6 +15,9 @@ public class PersonManager {
 
     private static int instanceCounter;
 
+    public static final String ANSI_RESET = "\u001B[0m";
+    public static final String ANSI_BLACK = "\u001B[30m";
+
     private static final String filename = "persons.txt";
 
     private static File file = new File(filename);
@@ -75,16 +78,33 @@ public class PersonManager {
                         System.err.println("Enter a valid number");
                     }
                 }
+                case 3 -> {
+                    try {
+                        deletePerson();
+                    } catch (RuntimeException e) {
+                        System.err.println("Enter a valid number");
+                    }
+                }
+                case 4 ->{
+                    try {
+                        searchPerson();
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                }
 
 
                 //TODO: restliche Funktionen einbinden
-                case 8 -> System.out.println("BYE!");
+                case 7 -> System.out.println("BYE!");
                 case -1 -> showPeople();
                 default -> System.err.println("Ungültige Funktion!");
             }
 
         } while (input != 8);
     }
+
+
+
 
     private static void showPeople() {
         personList = new ArrayList<>();
@@ -100,18 +120,30 @@ public class PersonManager {
     public static void showMenu() {
         System.out.println("---------PERSONALVERWALTUNG---------");
         System.out.println("1. Add new person");
-        System.out.println("2. Edit person");
+        if (personList.size() < 1) {
+            System.out.println(ANSI_BLACK + "2. Edit person");
+            System.out.println("3. Delete person" );
+            System.out.println("4. Search person");
+            System.out.println("5. Informations about person");
+            System.out.println("6. Analyse people" + ANSI_RESET);
+        } else {
+            System.out.println("2. Edit person");
+            System.out.println("3. Delete person");
+            System.out.println("4. Search person");
+            System.out.println("5. Informations about person");
+            System.out.println("6. Analyse people");
+        }
         //TODO: restliche Funktionen einbinden
 
 
-        System.out.println("8. End");
+        System.out.println("7. End");
         System.out.print(">");
     }
 
     public static void addPerson() throws Exception {
         Person p1 = readInputs();
         personList.add(p1);
-        instanceCounter++;
+        syncInstanceCounter();
         writePeopleToFile();
     }
 
@@ -123,7 +155,7 @@ public class PersonManager {
 
         int personNR = Integer.parseInt(systemScanner.next());
 
-        if (personNR <= personList.size()) {
+        if (personNR <= personList.size() && personNR >= 0) {
 
             do {
                 System.out.println("What do you want to edit?");
@@ -142,7 +174,6 @@ public class PersonManager {
             }
 
 
-            Person.syncInstanceCounter(instanceCounter - 2);
             Person originP = personList.get(personNR - 1);
 
             Person editedPerson = switch (input) {
@@ -212,9 +243,53 @@ public class PersonManager {
 
             personList.set(personNR - 1, editedPerson);
 
+        } else {
+            System.out.println("Enter a valid number");
         }
         writePeopleToFile();
     }
+
+    private static void deletePerson() throws RuntimeException {
+
+        showPeople();
+
+
+        int idOfPerson;
+        do {
+            System.out.println("Which person do you want to delete (1...n): \n Enter -1 to escape ");
+
+            try {
+                idOfPerson = Integer.parseInt(systemScanner.next());
+            } catch (NumberFormatException e) {
+                throw new RuntimeException(e);
+            }
+
+            if (idOfPerson == -1) {
+                return;
+            }
+
+        } while (idOfPerson >= personList.size() && idOfPerson <= 0);
+
+        personList.remove(idOfPerson - 1);
+        syncInstanceCounter();
+        writePeopleToFile();
+    }
+
+    private static void searchPerson() {
+        System.out.println("Enter any Information you know about the person:");
+        String info = systemScanner.next();
+
+        List<Person> foundPeople = new ArrayList<>();
+
+        for (Person person : personList) {
+            if (person.allFieldsForSearch().contains(info)){
+                foundPeople.add(person);
+            }
+        }
+
+        showPeople();
+    }
+
 
     private static Adress getNewAdress() {
         while (true) {
@@ -275,18 +350,17 @@ public class PersonManager {
     }
 
     public static void writePeopleToFile() {
-        //emptyFile();
         PrintWriter printWriter = null;
         try {
             printWriter = new PrintWriter(file);
         } catch (FileNotFoundException e) {
-            System.out.println("nig");
+            System.out.println("PrintWriter failed");
         }
         printWriter.println(instanceCounter);
         printWriter.flush();
 
-        for (Person person : personList) {
-            printWriter.println(serialize(person));
+        for (int i = 0; i < personList.size(); i++) {
+            printWriter.println(serialize(personList.get(i), i + 1));
             printWriter.flush();
         }
     }
@@ -348,8 +422,8 @@ public class PersonManager {
                 jobTitle, department, workTime, description, "");
     }
 
-    public static String serialize(Person person) {
-        String serializedPerson = (person.id() + ": " +
+    public static String serialize(Person person, int id) {
+        String serializedPerson = (id + ": " +
                 FIRSTNAME + EQUALS + person.firstName() + REGEX +
                 LASTNAME + EQUALS + person.lastName() + REGEX +
                 BIRTHDAY + EQUALS + person.birthday().toString() + REGEX +
@@ -432,6 +506,11 @@ public class PersonManager {
         return new Person(id, firstName, lastName, birthday, gender, salary, adress, telephoneNumber, email, jobTitle,
                 department, workTime, description, "");
     }
+
+    private static void syncInstanceCounter() {
+        instanceCounter = personList.size();
+    }
+}
 
 
 //    public static void emptyFile() {
