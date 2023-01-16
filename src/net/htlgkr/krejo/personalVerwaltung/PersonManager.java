@@ -311,7 +311,7 @@ public class PersonManager {
         do {
             System.out.println("Enter the Number of the Person you want to get information about (1...n):");
             personNR = Integer.parseInt(systemScanner.next());
-        } while (personNR >= personList.size() || personNR <= 0);
+        } while (personNR > personList.size() || personNR <= 0);
 
         System.out.println(personList.get(personNR-1));
     }
@@ -321,7 +321,7 @@ public class PersonManager {
 
         long totalAge = 0;
 
-        int totalSalary = 0;
+        int salary = 0;
         int highestSalary = 0;
         int lowestSalary = 0;
         double averageSalary = 0;
@@ -336,12 +336,12 @@ public class PersonManager {
             Period period = Period.between(person.birthday(), LocalDate.now());
             totalAge += period.toTotalMonths();
 
-            totalSalary = person.salary();
-            averageSalary += totalSalary;
-            if (highestSalary < totalSalary) {
-                highestSalary = totalSalary;
-            } else if (totalSalary < lowestSalary) {
-                lowestSalary = totalSalary;
+            salary = person.salary();
+            averageSalary += salary;
+            if (highestSalary < salary) {
+                highestSalary = salary;
+            } else if (salary < lowestSalary) {
+                lowestSalary = salary;
             }
 
         }
@@ -351,9 +351,9 @@ public class PersonManager {
             System.out.println(gender + ": " + genderMap.get(gender) + " people.");
         }
 
-        double averageAge = (double) ((totalAge/personList.size()) / 12 + (totalAge/personList.size()) % 12);
+        double averageAge = (double) (totalAge/personList.size()) / 12;
 
-        averageSalary = (double) totalSalary/personList.size();
+        averageSalary = averageSalary/personList.size();
 
         System.out.println("Average age: " + averageAge + " years.");
         System.out.println("Average salary: " + averageSalary + " €");
