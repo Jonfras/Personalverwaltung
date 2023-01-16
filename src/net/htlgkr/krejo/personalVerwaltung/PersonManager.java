@@ -2,9 +2,8 @@ package net.htlgkr.krejo.personalVerwaltung;
 
 import java.io.*;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.time.Period;
+import java.util.*;
 
 public class PersonManager {
 
@@ -85,9 +84,23 @@ public class PersonManager {
                         System.err.println("Enter a valid number");
                     }
                 }
-                case 4 ->{
+                case 4 -> {
                     try {
                         searchPerson();
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+                case 5 -> {
+                    try {
+                        informationAboutPerson();
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+                case 6 -> {
+                    try {
+                        analysePeople();
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -95,7 +108,10 @@ public class PersonManager {
 
 
                 //TODO: restliche Funktionen einbinden
-                case 7 -> System.out.println("BYE!");
+                case 7 -> {
+                    System.out.println("BYE!");
+                    return;
+                }
                 case -1 -> showPeople();
                 default -> System.err.println("Ungültige Funktion!");
             }
@@ -104,17 +120,16 @@ public class PersonManager {
     }
 
 
-
-
     private static void showPeople() {
-        personList = new ArrayList<>();
-        try {
-            readPeopleFromFile();
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
-        } catch (FileEmptyException e) {
-            System.out.println("File is empty");
-        }
+        personList.forEach(System.out::println);
+//        personList = new ArrayList<>();
+//        try {
+//            readPeopleFromFile();
+//        } catch (FileNotFoundException e) {
+//            throw new RuntimeException(e);
+//        } catch (FileEmptyException e) {
+//            System.out.println("File is empty");
+//        }
     }
 
     public static void showMenu() {
@@ -122,15 +137,15 @@ public class PersonManager {
         System.out.println("1. Add new person");
         if (personList.size() < 1) {
             System.out.println(ANSI_BLACK + "2. Edit person");
-            System.out.println("3. Delete person" );
+            System.out.println("3. Delete person");
             System.out.println("4. Search person");
-            System.out.println("5. Informations about person");
+            System.out.println("5. Information about person");
             System.out.println("6. Analyse people" + ANSI_RESET);
         } else {
             System.out.println("2. Edit person");
             System.out.println("3. Delete person");
             System.out.println("4. Search person");
-            System.out.println("5. Informations about person");
+            System.out.println("5. Information about person");
             System.out.println("6. Analyse people");
         }
         //TODO: restliche Funktionen einbinden
@@ -254,23 +269,23 @@ public class PersonManager {
         showPeople();
 
 
-        int idOfPerson;
+        int personNR;
         do {
             System.out.println("Which person do you want to delete (1...n): \n Enter -1 to escape ");
 
             try {
-                idOfPerson = Integer.parseInt(systemScanner.next());
+                personNR = Integer.parseInt(systemScanner.next());
             } catch (NumberFormatException e) {
                 throw new RuntimeException(e);
             }
 
-            if (idOfPerson == -1) {
+            if (personNR == -1) {
                 return;
             }
 
-        } while (idOfPerson >= personList.size() && idOfPerson <= 0);
+        } while (personNR >= personList.size() || personNR <= 0);
 
-        personList.remove(idOfPerson - 1);
+        personList.remove(personNR - 1);
         syncInstanceCounter();
         writePeopleToFile();
     }
@@ -282,12 +297,68 @@ public class PersonManager {
         List<Person> foundPeople = new ArrayList<>();
 
         for (Person person : personList) {
-            if (person.allFieldsForSearch().contains(info)){
+            if (person.allFieldsForSearch().contains(info)) {
                 foundPeople.add(person);
             }
         }
 
-        showPeople();
+        foundPeople.forEach(System.out::println);
+    }
+
+    private static void informationAboutPerson() {
+        int personNR;
+
+        do {
+            System.out.println("Enter the Number of the Person you want to get information about (1...n):");
+            personNR = Integer.parseInt(systemScanner.next());
+        } while (personNR >= personList.size() || personNR <= 0);
+
+        System.out.println(personList.get(personNR-1));
+    }
+
+    private static void analysePeople() {
+        Map<String, Integer> genderMap = new HashMap<>();
+
+        long totalAge = 0;
+
+        int totalSalary = 0;
+        int highestSalary = 0;
+        int lowestSalary = 0;
+        double averageSalary = 0;
+
+        for (Person person : personList) {
+            if (!genderMap.containsKey(person.gender().trim())) {
+                genderMap.put(person.gender(), 1);
+            } else {
+                genderMap.put(person.gender(), genderMap.get(person.gender()) + 1);
+            }
+
+            Period period = Period.between(person.birthday(), LocalDate.now());
+            totalAge += period.toTotalMonths();
+
+            totalSalary = person.salary();
+            averageSalary += totalSalary;
+            if (highestSalary < totalSalary) {
+                highestSalary = totalSalary;
+            } else if (totalSalary < lowestSalary) {
+                lowestSalary = totalSalary;
+            }
+
+        }
+
+
+        for (String gender : genderMap.keySet()) {
+            System.out.println(gender + ": " + genderMap.get(gender) + " people.");
+        }
+
+        double averageAge = (double) ((totalAge/personList.size()) / 12 + (totalAge/personList.size()) % 12);
+
+        averageSalary = (double) totalSalary/personList.size();
+
+        System.out.println("Average age: " + averageAge + " years.");
+        System.out.println("Average salary: " + averageSalary + " €");
+
+
     }
 
 

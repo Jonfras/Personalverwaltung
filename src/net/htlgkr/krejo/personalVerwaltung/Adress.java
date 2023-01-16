@@ -13,6 +13,6 @@ public record Adress(String street,
                 "HOUSENUMBER=" + houseNumber +
                 "ZIPCODE=" + zipCode +
                 "CITYNAME=" + cityName +
-                "COUNTRYNAME=" + countryName;
+                "COUNTRYNAME=" + countryName ;
     }
 }
